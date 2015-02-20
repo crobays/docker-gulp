@@ -1,11 +1,13 @@
 #!/bin/bash
-gulpfile="/conf/gulpfile.js"
+cd /root
 if [ -f "/project/gulpfile.js" ]
 then
-	gulpfile="/project/gulpfile.js"
+	gulpfile="./gulpfile-custom.js"
+	cp -f /project/gulpfile.js $gulpfile
+else
+	gulpfile="./gulpfile.js"
+	cp -f /conf/gulpfile.js $gulpfile
 fi
 source /usr/local/rvm/scripts/rvm
 
-cd /root
-cp -f "$gulpfile" ./gulpfile.js
-gulp
+gulp --gulpfile="$gulpfile"
