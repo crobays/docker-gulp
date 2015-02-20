@@ -16,7 +16,7 @@ ADD /scripts/rvm.sh /scripts/rvm.sh
 RUN /scripts/rvm.sh
 ENV PATH /usr/local/rvm/bin:$PATH
 
-RUN gem install sass -v 3.4.5
+RUN gem install sass -v 3.4.9
 RUN gem install compass
 RUN gem uninstall sass -v 3.4.6 2&>/dev/null
 
@@ -25,18 +25,18 @@ RUN apt-get install -y software-properties-common && \
 	apt-get update
 
 RUN apt-get install -y \
-					php5-cli \
-					php5-fpm \
-					php5-mysql \
-					php5-pgsql \
-					php5-sqlite \
-					php5-curl \
-					php5-gd \
-					php5-mcrypt \
-					php5-memcache \
-					php5-intl \
-					php5-imap \
-					php5-tidy
+	php5-cli \
+	php5-fpm \
+	php5-mysql \
+	php5-pgsql \
+	php5-sqlite \
+	php5-curl \
+	php5-gd \
+	php5-mcrypt \
+	php5-memcache \
+	php5-intl \
+	php5-imap \
+	php5-tidy
 
 ADD /scripts/download-and-install.sh /scripts/download-and-install.sh
 ADD /scripts/node.sh /scripts/node.sh
@@ -47,22 +47,27 @@ ENV PATH /usr/local/node/bin:$PATH
 WORKDIR /root
 
 RUN npm install -g gulp
-RUN npm install \
+RUN cd /root && npm install \
 	gulp \
+	gulp-autoprefixer \
+ 	gulp-bower \
 	browser-sync \
+ 	browserify \
+ 	browserify-shim \
 	gulp-coffee \
+	colors \
 	gulp-compass \
 	gulp-concat \
 	gulp-exec \
 	gulp-phpunit \
 	gulp-phpspec \
-	gulp-util
+	gulp-ruby-sass \
+	vinyl-source-stream \
+	gulp-util \
+	watchify
 
 # RUN npm install -g \
-# 	gulp-autoprefixer \
-# 	gulp-bower \
 # 	main-bower-files \
-# 	gulp-browserify \
 # 	gulp-cache \
 # 	gulp-coffeelint \
 # 	gulp-cssimport \
@@ -72,7 +77,6 @@ RUN npm install \
 # 	gulp-minify-css \
 # 	gulp-sourcemaps \
 # 	gulp-sass \
-# 	gulp-ruby-sass \
 # 	gulp-rename \
 # 	gulp-uglify
 
@@ -80,10 +84,12 @@ RUN npm install \
 ENV TIMEZONE Etc/UTC
 ENV ENVIRONMENT prod
 
-VOLUME  ["/project"]
+VOLUME ["/project"]
 
 # BrowserSync port
 EXPOSE 3000
+
+RUN echo '/sbin/my_init' > /root/.bash_history
 
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -103,7 +109,17 @@ ADD /conf /conf
 #   -t crobays/gulp \
 #   /workspace/docker/crobays/gulp && \
 # docker run \
-#   -v /workspace/projects/james-mijdrecht/www-jamesmijdrecht-nl:/project \
+#   -v /workspace/projects/userx/crane-userx-nl:/project \
+#   -p 3000:3000 \
+#   -e ENVIRONMENT=dev \
+#   -e TIMEZONE=Europe/Amsterdam \
+#   -it --rm \
+#   crobays/gulp bash
+
+
+# docker run \
+#   -v /workspace/projects/crobays/foundation-apps:/project \
+#   -p 3000:3000 \
 #   -e ENVIRONMENT=dev \
 #   -e TIMEZONE=Europe/Amsterdam \
 #   -it --rm \

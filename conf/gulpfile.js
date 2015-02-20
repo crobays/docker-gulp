@@ -1,11 +1,14 @@
 var gulp = require('gulp')
-    //,autoprefixer = require('gulp-autoprefixer')
-    //,browserify = require('browserify')
+    ,autoprefixer = require('gulp-autoprefixer')
+    ,bower = require('gulp-bower')
+    //,bower_files = require('main-bower-files')
+    ,browserify = require('browserify')
     ,browserSync = require('browser-sync')
-    //,bower = require('gulp-bower')
+    //,browserify_shim = require('browserify-shim')
     //,cache = require('gulp-cache')
     ,coffee = require('gulp-coffee')
     //,coffeelint = require('gulp-coffeelint')
+    ,colors = require('colors')
     ,compass = require('gulp-compass')
     ,concat = require('gulp-concat')
     //,cssimport = require("gulp-cssimport")
@@ -17,28 +20,29 @@ var gulp = require('gulp')
     ,fs = require('fs')
     //,filter = require('gulp-filter')
     //,mincss = require('gulp-minify-css')
-    //,bowerFiles = require('main-bower-files')
     //,path = require('path')
     ,phpunit = require('gulp-phpunit')
     ,phpspec = require('gulp-phpspec')
     //,plumber = require('gulp-plumber')
     //,sass = require('gulp-sass')
+    ,source = require('vinyl-source-stream')
     //,sourcemaps = require('gulp-sourcemaps')
     //,sys = require('sys')
     //,rename = require('gulp-rename')
     //,uglify = require('gulp-uglify')
     ,gutil = require('gulp-util')
+    ,watchify = require('watchify')
     ;
 
 var project = '/project';
+var assets = project+'/assets';
 
 var paths = {
-    styles: project+'/assets/styles/*',
-    style: project+'/assets/styles/style.*',
-    scripts: project+'/assets/scripts/*',
+    styles: assets+'/styles',
+    scripts: assets+'/scripts',
     svg: project+'/images/*.svg',
-    php: project+'/app/**/*.php',
-    output_dir: project+'/assets'
+    php: project+'/app',
+    output_dir: assets
 };
 
 gulp.task('browser-sync', function() {
@@ -52,30 +56,6 @@ var browserSyncConfig = {
 };
 
 var env = process.env.ENVIRONMENT;
-
-var sass_config = {
-    style: 'compressed',
-    sourcemap: false,
-    project: project+'/assets',
-    import_path: 'bower_components',
-    css: './',
-    scss: 'styles',
-    sass: 'styles',
-    javascript: 'scripts',
-    font: 'fonts',
-    image: 'img',
-    picture: 'pic'
-};
-
-if(env == 'dev' || env == 'local')
-{
-    sass_config.style = 'nested';
-    sass_config.sourcemap = true;
-}
-
-var exec_config = {
-    pipeStdout: true
-};
 
 var report_options = {
     err: true, // default = true, false means don't write err
@@ -94,25 +74,36 @@ var commands = {
     }
 };
 
+var sass_config = {
+    style: 'compressed',
+    sourcemap: false,
+    project: assets,
+    import_path: 'bower_components',
+    css: './',
+    scss: 'styles',
+    sass: 'styles'
+};
+
+if(env == 'dev' || env == 'local')
+{
+    sass_config.style = 'nested';
+    sass_config.sourcemap = true;
+}
+
 gulp.task('sass', function() {
-    return gulp.src(paths.style)
-        .pipe(exec(commands.sass.pre, exec_config))
+    return gulp.src(paths.styles+'/*')
+        .pipe(exec(commands.sass.pre, {pipeStdout: false}))
         .pipe(exec.reporter(report_options))
         //.pipe(filter(['*', '!**/_*^']))
-        //.pipe(plumber())
-        // .pipe(function(){
-        //     console.log('change');
-        // })
         .pipe(compass(sass_config))
+        .pipe(autoprefixer({browsers: ['last 2 versions', 'ie 10']}))
         .on('error', function (err) {
             gutil.log(err.message);
             this.emit('end');
         })
-        .pipe(exec(commands.sass.post, exec_config))
+        .pipe(gulp.dest(paths.output_dir))
+        .pipe(exec(commands.sass.post, {pipeStdout: false}))
         .pipe(exec.reporter(report_options))
-        //.pipe(sass(config))
-        //.pipe(gulp.dest(paths.output_dir))
-        //.pipe(autoprefixer('last 2 versions'))
         .pipe(browserSync.reload(browserSyncConfig))
 });
 
@@ -137,41 +128,91 @@ gulp.task('svg', function() {
 //         .pipe(gulp.dest(paths.output_dir))
 // });
 
-gulp.task('js', function() {
+// gulp.task('js', function() {
+//     exec(commands.js.pre, {pipeStdout: false});
+//     exec.reporter(report_options);
 
-    var scripts = [
-        "assets/bower_components/jquery/dist/jquery.js",
-        "assets/scripts/foundation.min.js",
-        "assets/scripts/script.js"
-    ];
-    //bowerFiles();
+//     var bundler = watchify(browserify(paths.script, {debug: true}), watchify.args);
+//     var output_file = 'script.js';
+//     bundler.transform('/root/node_modules/browserify-shim');
+//     bundler.on('update', rebundle);
+//     function rebundle() {
+//         return bundler.bundle()
+//             .on('error', function (err) {
+//                 gutil.log(err.message);
+//                 this.emit('end');
+//             })
+//             .pipe(source(output_file))
+//             .pipe(gulp.dest(paths.output_dir))
+            
 
+//     }
+//     return rebundle();
+// });
 
-    return gulp.src(scripts)
-        .pipe(exec(commands.js.pre, exec_config))
-        .pipe(exec.reporter(report_options))
-        // .pipe(filter(['**/*.js', '!**/_*']))
-        
-        // .pipe(filter(function(file){
-        //     console.log(file.path);
-        //     return path.basename(file.path).substr(0, 1) != "_";
-        // }))
-        
-        .on('error', function (err) {
-            gutil.log(err.message);
-            this.emit('end');
-        })
-        .pipe(concat('script.js'))
-        .pipe(exec(commands.js.pre, exec_config))
-        .pipe(exec.reporter(report_options))
-        //.pipe(browserify({debug: true}))
-        
-        // .pipe(browserSync.reload(browserSyncConfig))
-        // .pipe(uglify())
-        // .pipe(rename({
-        //     suffix: '.min'
-        // }))
-        .pipe(gulp.dest(paths.output_dir))
+var createBundle, createBundles;
+
+createBundle = function(options) {
+    var bundler = browserify({
+        entries: options.input,
+        extensions: options.extensions,
+        debug: true
+    });
+    bundler.transform('/root/node_modules/browserify-shim');
+    var rebundle = function() {
+        var startTime = new Date().getTime();
+        return bundler
+            .bundle()
+            .on('error', function() {
+                return console.log(arguments);
+            })
+            // .pipe(exec(commands.js.pre, {pipeStdout: false}))
+            // .pipe(exec.reporter(report_options))
+            .pipe(source(options.output))
+            .pipe(gulp.dest(options.destination))
+            .on('end', function() {
+                var time = (new Date().getTime() - startTime) / 1000;
+                return console.log("" + options.output.cyan + " was browserified: " + (time + 's').magenta);
+            })
+            .pipe(browserSync.reload(browserSyncConfig))
+            // .pipe(exec(commands.js.post, {pipeStdout: false}))
+            // .pipe(exec.reporter(report_options))
+            ;
+    };
+
+    return rebundle();
+};
+
+createBundles = function(bundles) {
+    return bundles.forEach(function(bundle) {
+        return createBundle({
+            input: bundle.input,
+            output: bundle.output,
+            extensions: bundle.extensions,
+            destination: bundle.destination
+        });
+    });
+};
+
+gulp.task('browserify', function() {
+
+    var scripts = fs.readdirSync(paths.scripts);
+    var files = [];
+
+    scripts.forEach(function(script) {
+        // Do not include dirctories, hidden or underscored scripts
+        if (['.', '_'].indexOf(script.substr(0, 1)) !== -1 || fs.lstatSync(paths.scripts+'/'+script).isDirectory()) {
+            return;
+        }
+
+        files.push({
+            input: [paths.scripts+'/'+script],
+            output: script,
+            extensions: ['.coffee', '.js'],
+            destination: paths.output_dir
+        });
+    });
+    return createBundles(files);
 });
 
 // gulp.task('lint', function () {
@@ -200,8 +241,6 @@ gulp.task('js', function() {
 //     .pipe(gulp.dest(paths.coffee.output.dir));
 // });
 
-//gulp.task('bower', ['bower-copy']);
-
 gulp.task('php', function() {
     exec('phpunit', function(error, stdout) {
         sys.puts(stdout);
@@ -209,36 +248,12 @@ gulp.task('php', function() {
     browserSync.reload();
 });
 
-// gulp.task('bower', function() {
-//     return gulp.src(bower)
-//         .pipe(sass({
-//             style: 'expanded'
-//         }).on('error', gutil.log))
-//         .pipe(autoprefixer('last 2 versions'))
-//         .pipe(concat('bower.css'))
-//         .pipe(gulp.dest(paths.css.output.dir))
-//         .pipe(browserSync.reload({
-//             stream: true
-//         }));
-// });
-
 gulp.task('watch', ['browser-sync'], function() {
-    gulp.watch(paths.styles, ['sass']);
-    gulp.watch(paths.scripts, ['js']);
-    gulp.watch(paths.svg, ['svg']);
-    gulp.watch(paths.php, ['php']);
-
-    // gulp.watch(mainBowerFiles, ['bower']);
-    // gulp.watch(paths.input.scripts.dir+'/'+paths.input.scripts.file, ['phpunit']).on('change', function(file){
-    //  server.changed(file.path);
-    // });
-    // gulp.watch(paths.input.styles.dir+'/'+paths.css.input.file, ['phpunit']).on('change', function(file){
-    //  server.changed(file.path);
-    // });
-    // gulp.watch('app/**/*.php', ['phpunit']).on('change', function(file){
-    //  server.changed(file.path);
-    // });
+    gulp.watch(paths.styles+'/**/*', ['sass']);
+    gulp.watch(paths.php+'/**/*.php', ['php']);
+    gulp.watch(paths.scripts+'/**/*', ['browserify']);
 });
 
 //gulp.task('default', ['watch', 'sass', 'coffee', 'js', 'php']);
-gulp.task('default', ['watch', 'sass', 'js', 'php']);
+gulp.task('default', ['watch', 'sass', 'browserify', 'php']);
+//gulp.task('default', ['watch', 'js']);
