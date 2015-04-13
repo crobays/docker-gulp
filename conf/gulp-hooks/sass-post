@@ -1,2 +1,0 @@
-#!/bin/bash
-# php /project/artisan asset:generate-css-images /project/assets/style.css

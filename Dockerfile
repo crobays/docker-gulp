@@ -1,4 +1,4 @@
-FROM phusion/baseimage:0.9.15
+FROM phusion/baseimage:0.9.16
 ENV HOME /root
 RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
 CMD ["/sbin/my_init"]
@@ -23,20 +23,6 @@ RUN gem uninstall sass -v 3.4.6 2&>/dev/null
 RUN apt-get install -y software-properties-common && \
 	add-apt-repository -y ppa:nginx/stable && \
 	apt-get update
-
-RUN apt-get install -y \
-	php5-cli \
-	php5-fpm \
-	php5-mysql \
-	php5-pgsql \
-	php5-sqlite \
-	php5-curl \
-	php5-gd \
-	php5-mcrypt \
-	php5-memcache \
-	php5-intl \
-	php5-imap \
-	php5-tidy
 
 ADD /scripts/download-and-install.sh /scripts/download-and-install.sh
 ADD /scripts/node.sh /scripts/node.sh
@@ -63,6 +49,7 @@ RUN cd /root && npm install \
 	gulp-phpspec \
 	gulp-ruby-sass \
 	vinyl-source-stream \
+ 	gulp-sourcemaps \
 	gulp-util \
 	watchify
 
@@ -75,14 +62,17 @@ RUN cd /root && npm install \
 # 	gulp-exit \
 # 	gulp-filter \
 # 	gulp-minify-css \
-# 	gulp-sourcemaps \
 # 	gulp-sass \
 # 	gulp-rename \
 # 	gulp-uglify
 
 # Exposed ENV
 ENV TIMEZONE Etc/UTC
-ENV ENVIRONMENT prod
+ENV ENVIRONMENT production
+ENV BASE_DIR static/app
+ENV STYLES_DIR styles
+ENV SCRIPTS_DIR scripts
+ENV IMAGES_DIR images
 
 VOLUME ["/project"]
 
@@ -98,23 +88,23 @@ RUN mkdir /etc/service/gulp
 ADD /scripts/gulp-run.sh /etc/service/gulp/run
 
 RUN echo "#!/bin/bash\necho \"\$TIMEZONE\" > /etc/timezone && dpkg-reconfigure -f noninteractive tzdata" > /etc/my_init.d/01-timezone.sh
-ADD /scripts/php-config.sh /etc/my_init.d/02-php-config.sh
-ADD /scripts/gulp-config.sh /etc/my_init.d/03-gulp-config.sh
+ADD /scripts/gulp-config.sh /etc/my_init.d/02-gulp-config.sh
 
 RUN chmod +x /etc/my_init.d/* && chmod +x /etc/service/*/run
 
 ADD /conf /conf
 
 # docker build \
-#   -t crobays/gulp \
-#   /workspace/docker/crobays/gulp && \
+# --tag crobays/gulp \
+# /workspace/docker/crobays/gulp && \
 # docker run \
-#   -v /workspace/projects/userx/crane-userx-nl:/project \
-#   -p 3000:3000 \
-#   -e ENVIRONMENT=dev \
-#   -e TIMEZONE=Europe/Amsterdam \
-#   -it --rm \
-#   crobays/gulp bash
+# -v /workspace/projects/kwekerij-vlasman/www-kwekerijvlasman-nl:/project \
+# -p 3000:3000 \
+# -e ENVIRONMENT=dev \
+# -e TIMEZONE=Europe/Amsterdam \
+# --name gulp \
+# -it --rm \
+# crobays/gulp
 
 
 # docker run \

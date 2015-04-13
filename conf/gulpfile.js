@@ -9,7 +9,7 @@ var gulp = require('gulp')
     ,coffee = require('gulp-coffee')
     //,coffeelint = require('gulp-coffeelint')
     ,colors = require('colors')
-    ,compass = require('gulp-compass')
+    //,compass = require('gulp-compass')
     ,concat = require('gulp-concat')
     //,cssimport = require("gulp-cssimport")
     //,cssGlobbing = require('gulp-css-globbing')
@@ -21,12 +21,13 @@ var gulp = require('gulp')
     //,filter = require('gulp-filter')
     //,mincss = require('gulp-minify-css')
     //,path = require('path')
-    ,phpunit = require('gulp-phpunit')
-    ,phpspec = require('gulp-phpspec')
+    //,phpunit = require('gulp-phpunit')
+    //,phpspec = require('gulp-phpspec')
     //,plumber = require('gulp-plumber')
     //,sass = require('gulp-sass')
+    ,sass = require('gulp-ruby-sass')
     ,source = require('vinyl-source-stream')
-    //,sourcemaps = require('gulp-sourcemaps')
+    ,sourcemaps = require('gulp-sourcemaps')
     //,sys = require('sys')
     //,rename = require('gulp-rename')
     //,uglify = require('gulp-uglify')
@@ -35,20 +36,22 @@ var gulp = require('gulp')
     ;
 
 var project = '/project';
-var assets = project+'/assets';
+var assets = project+'/'+process.env.BASE_DIR;
 
 var paths = {
-    styles: assets+'/styles',
-    scripts: assets+'/scripts',
-    svg: project+'/images/*.svg',
-    php: project+'/app',
+    styles: assets+'/'+process.env.STYLES_DIR,
+    scripts: assets+'/'+process.env.SCRIPTS_DIR,
+    svg: assets+'/'+process.env.IMAGES_DIR+'/*.svg',
+    //php: project+'/app',
     output_dir: assets
 };
 
 gulp.task('browser-sync', function() {
-    browserSync.init({
-        proxy: process.env.BACKEND_PORT_80_TCP_ADDR+":80"
-    });
+    if (process.env.BACKEND_PORT) {
+        browserSync.init({
+            proxy: process.env.BACKEND_PORT.substr(6)
+        });
+    }
 });
 
 var browserSyncConfig = {
@@ -80,23 +83,20 @@ var sass_config = {
     project: assets,
     import_path: 'bower_components',
     css: './',
-    scss: 'styles',
-    sass: 'styles'
+    scss: process.env.STYLES_DIR,
+    sass: process.env.STYLES_DIR
 };
 
-if(env == 'dev' || env == 'local')
+if(env.substr(0, 3) == 'dev' || env == 'local')
 {
     sass_config.style = 'nested';
     sass_config.sourcemap = true;
 }
 
-gulp.task('sass', function() {
-    return gulp.src(paths.styles+'/*')
-        .pipe(exec(commands.sass.pre, {pipeStdout: false}))
-        .pipe(exec.reporter(report_options))
-        //.pipe(filter(['*', '!**/_*^']))
-        .pipe(compass(sass_config))
-        .pipe(autoprefixer({browsers: ['last 2 versions', 'ie 10']}))
+gulp.task('sass', function () {
+    sass(paths.styles+'/style.sass', {sourcemap: true, style: 'compact'})
+        .pipe(autoprefixer("last 1 version", "> 1%", "ie 8", "ie 7"))
+        .pipe(sourcemaps('.'))
         .on('error', function (err) {
             gutil.log(err.message);
             this.emit('end');
@@ -106,6 +106,23 @@ gulp.task('sass', function() {
         .pipe(exec.reporter(report_options))
         .pipe(browserSync.reload(browserSyncConfig))
 });
+
+//gulp.task('sass', function() {
+//    return gulp.src(paths.styles+'/*')
+//        .pipe(exec(commands.sass.pre, {pipeStdout: false}))
+//        .pipe(exec.reporter(report_options))
+//        //.pipe(filter(['*', '!**/_*^']))
+//        .pipe(compass(sass_config))
+//        .pipe(autoprefixer({browsers: ['last 2 versions', 'ie 10']}))
+//        .on('error', function (err) {
+//            gutil.log(err.message);
+//            this.emit('end');
+//        })
+//        .pipe(gulp.dest(paths.output_dir))
+//        .pipe(exec(commands.sass.post, {pipeStdout: false}))
+//        .pipe(exec.reporter(report_options))
+//        .pipe(browserSync.reload(browserSyncConfig))
+//});
 
 gulp.task('svg', function() {
     return gulp
@@ -241,19 +258,19 @@ gulp.task('browserify', function() {
 //     .pipe(gulp.dest(paths.coffee.output.dir));
 // });
 
-gulp.task('php', function() {
-    exec('phpunit', function(error, stdout) {
-        sys.puts(stdout);
-    });
-    browserSync.reload();
-});
+// gulp.task('php', function() {
+//     exec('phpunit', function(error, stdout) {
+//         sys.puts(stdout);
+//     });
+//     browserSync.reload();
+// });
 
 gulp.task('watch', ['browser-sync'], function() {
     gulp.watch(paths.styles+'/**/*', ['sass']);
-    gulp.watch(paths.php+'/**/*.php', ['php']);
+    //gulp.watch(paths.php+'/**/*.php', ['php']);
     gulp.watch(paths.scripts+'/**/*', ['browserify']);
 });
 
 //gulp.task('default', ['watch', 'sass', 'coffee', 'js', 'php']);
-gulp.task('default', ['watch', 'sass', 'browserify', 'php']);
+gulp.task('default', ['watch', 'sass', 'browserify']);
 //gulp.task('default', ['watch', 'js']);
