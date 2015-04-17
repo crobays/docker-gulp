@@ -39,32 +39,46 @@ RUN cd /root && npm install \
  	gulp-bower \
 	browser-sync \
  	browserify \
- 	browserify-shim \
+ 	browserify-shim
+RUN cd /root && npm install \
+ 	gulp-cache \
 	gulp-coffee \
 	colors \
 	gulp-compass \
 	gulp-concat \
-	gulp-exec \
+	del \
+	gulp-exec
+RUN cd /root && npm install \
+	globule \
+	gulp-imagemin \
+	imagemin-jpegoptim \
+	imagemin-optipng \
+	gulp-jshint \
+	gulp-less \
+	gulp-livereload
+RUN cd /root && npm install \
+ 	gulp-minify-css \
+ 	gulp-notify \
 	gulp-phpunit \
 	gulp-phpspec \
 	gulp-ruby-sass \
+	gulp-sass
+RUN cd /root && npm install \
 	vinyl-source-stream \
+ 	gulp-rename \
  	gulp-sourcemaps \
+ 	gulp-uglify \
 	gulp-util \
 	watchify
 
 # RUN npm install -g \
 # 	main-bower-files \
-# 	gulp-cache \
 # 	gulp-coffeelint \
 # 	gulp-cssimport \
 # 	gulp-css-globbing \
 # 	gulp-exit \
 # 	gulp-filter \
-# 	gulp-minify-css \
 # 	gulp-sass \
-# 	gulp-rename \
-# 	gulp-uglify
 
 # Exposed ENV
 ENV TIMEZONE Etc/UTC
