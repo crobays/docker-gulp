@@ -71,6 +71,9 @@ RUN cd /root && npm install \
 	gulp-util \
 	watchify
 
+RUN cd /root && npm install \
+	fs.extra
+
 # RUN npm install -g \
 # 	main-bower-files \
 # 	gulp-coffeelint \
@@ -91,7 +94,7 @@ ENV IMAGES_DIR images
 VOLUME ["/project"]
 
 # BrowserSync port
-EXPOSE 3000
+EXPOSE 3000 3001
 
 RUN echo '/sbin/my_init' > /root/.bash_history
 
