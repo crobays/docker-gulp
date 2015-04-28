@@ -1,13 +1,16 @@
 #!/bin/bash
 cd /root
-if [ -f "/project/gulpfile.js" ]
+
+if [ -f /project/gulpfile.js ]
 then
-	gulpfile="./gulpfile-custom.js"
-	cp -f /project/gulpfile.js $gulpfile
+	cp -f /project/gulpfile.js ./gulpfile.js
 else
-	gulpfile="./gulpfile.js"
-	cp -f /conf/gulpfile.js $gulpfile
+	cp -f /conf/gulpfile.js ./gulpfile.js
 fi
 source /usr/local/rvm/scripts/rvm
-
-gulp --gulpfile="$gulpfile"
+if [ -f /project/package.json ]
+then
+	cp -f /project/package.json ./package.json
+	npm install
+fi
+gulp

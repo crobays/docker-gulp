@@ -110,26 +110,3 @@ ADD /scripts/gulp-config.sh /etc/my_init.d/02-gulp-config.sh
 RUN chmod +x /etc/my_init.d/* && chmod +x /etc/service/*/run
 
 ADD /conf /conf
-
-# docker build \
-# --tag crobays/gulp \
-# /workspace/docker/crobays/gulp && \
-# docker run \
-# -v /workspace/projects/kwekerij-vlasman/www-kwekerijvlasman-nl:/project \
-# -p 3000:3000 \
-# -e ENVIRONMENT=dev \
-# -e TIMEZONE=Europe/Amsterdam \
-# --name gulp \
-# -it --rm \
-# crobays/gulp
-
-
-# docker run \
-#   -v /workspace/projects/crobays/foundation-apps:/project \
-#   -p 3000:3000 \
-#   -e ENVIRONMENT=dev \
-#   -e TIMEZONE=Europe/Amsterdam \
-#   -it --rm \
-#   crobays/gulp bash
-
-# /etc/my_init.d/01-timezone.sh ;/etc/my_init.d/02-gulp-config.sh
