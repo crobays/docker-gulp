@@ -30,7 +30,7 @@ RUN /scripts/node.sh
 
 ENV PATH /usr/local/node/bin:/root/node_modules/.bin:./node_modules/.bin:$PATH
 
-WORKDIR /root
+WORKDIR /project
 
 RUN npm install -g gulp
 RUN cd /root && npm install \
