@@ -5,5 +5,8 @@
 		 .
 
 	docker run \
+		-p 3000:3000 \
+		-p 3001:3001 \
+		-e TIMEZONE=Europe/Amsterdam \
 		-v ./:/project \
 		crobays/gulp
