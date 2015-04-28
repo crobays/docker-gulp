@@ -28,7 +28,7 @@ ADD /scripts/download-and-install.sh /scripts/download-and-install.sh
 ADD /scripts/node.sh /scripts/node.sh
 RUN /scripts/node.sh
 
-ENV PATH /usr/local/node/bin:$PATH
+ENV PATH /usr/local/node/bin:/root/node_modules/.bin:./node_modules/.bin:$PATH
 
 WORKDIR /root
 
