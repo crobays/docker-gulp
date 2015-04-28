@@ -1,12 +1,13 @@
 #!/bin/bash
 cd /root
 
-if [ -f /project/gulpfile.js ]
+if [ ! -f /project/gulpfile.js ]
 then
-	cp -f /project/gulpfile.js ./gulpfile.js
-else
-	cp -f /conf/gulpfile.js ./gulpfile.js
+	cp -f /conf/gulpfile.js /project/gulpfile.js
 fi
+
+cp -f /project/gulpfile.js ./gulpfile.js
+
 source /usr/local/rvm/scripts/rvm
 if [ -f /project/package.json ]
 then

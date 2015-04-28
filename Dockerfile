@@ -103,6 +103,8 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN mkdir /etc/service/gulp
 ADD /scripts/gulp-run.sh /etc/service/gulp/run
+RUN mkdir /etc/service/watch-files
+ADD /scripts/watch-files-run.sh /etc/service/watch-files/run
 
 RUN echo "#!/bin/bash\necho \"\$TIMEZONE\" > /etc/timezone && dpkg-reconfigure -f noninteractive tzdata" > /etc/my_init.d/01-timezone.sh
 ADD /scripts/gulp-config.sh /etc/my_init.d/02-gulp-config.sh
