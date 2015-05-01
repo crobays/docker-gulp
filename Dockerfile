@@ -35,7 +35,7 @@ WORKDIR /project
 # Exposed ENV
 ENV TIMEZONE Etc/UTC
 ENV ENVIRONMENT production
-ENV BASE_DIR static/app
+ENV BASE_DIR src/static/app
 ENV STYLES_DIR styles
 ENV SCRIPTS_DIR scripts
 ENV IMAGES_DIR images
