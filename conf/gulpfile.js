@@ -13,53 +13,62 @@ var gulp = require('gulp')
     ,concat = require('gulp-concat')
     //,cssimport = require("gulp-cssimport")
     //,cssGlobbing = require('gulp-css-globbing')
+    //,globule = require('globule')
     //,debug = require('gulp-debug')
     ,native_exec = require('child_process').exec
+    ,spawn = require('child_process').spawn
     ,exec = require('gulp-exec')
     //,exit = require('gulp-exit')
     ,fs = require('fs')
     //,filter = require('gulp-filter')
-    ,less = require('gulp-less')
-    //,mincss = require('gulp-minify-css')
+    //,less = require('gulp-less')
+    ,minifycss = require('gulp-minify-css')
     //,path = require('path')
     //,phpunit = require('gulp-phpunit')
     //,phpspec = require('gulp-phpspec')
     //,plumber = require('gulp-plumber')
-    //,sass = require('gulp-sass')
-    ,sass = require('gulp-ruby-sass')
+    ,sass = require('gulp-sass')
+    //,sass = require('gulp-ruby-sass')
     ,source = require('vinyl-source-stream')
     ,sourcemaps = require('gulp-sourcemaps')
     //,sys = require('sys')
-    //,rename = require('gulp-rename')
-    //,uglify = require('gulp-uglify')
+    ,rename = require('gulp-rename')
+    ,uglify = require('gulp-uglify')
     ,gutil = require('gulp-util')
     ,watchify = require('watchify')
     ;
 
 var project = '/project';
-var assets = project+'/'+process.env.BASE_DIR;
 
-var paths = {
-    styles: assets+'/'+process.env.STYLES_DIR,
-    scripts: assets+'/'+process.env.SCRIPTS_DIR,
-    svg: assets+'/'+process.env.IMAGES_DIR+'/*.svg',
-    //php: project+'/app',
-    output_dir: assets
+try {
+    fs.statSync(project);
+}
+catch(e) {
+    project = '.';
 };
 
-gulp.task('browser-sync', function() {
-    if (process.env.BACKEND_PORT) {
-        browserSync.init({
-            proxy: process.env.BACKEND_PORT.substr(6)
-        });
-    }
-});
+var styles_dir = process.env.STYLES_DIR,
+    scripts_dir = process.env.SCRIPTS_DIR,
+    base_path = project+'/'+process.env.BASE_DIR;
 
+var paths = {
+    src: project+'/src/',
+    styles: base_path+'/src/'+styles_dir,
+    sass: base_path+'/src/'+styles_dir+'/sass',
+    scripts: base_path+'/src/'+scripts_dir,
+    output: base_path+'/dist',
+    bower: base_path+'/bower_components',
+};
+
+process.stdout.write('base_path styles: '+paths.styles+"\n");
+process.stdout.write('base_path scripts: '+paths.scripts+"\n");
+process.stdout.write('output styles: '+paths.output+"/styles\n");
+process.stdout.write('output scripts: '+paths.output+"/scripts\n");
+
+var reload = browserSync.reload;
 var browserSyncConfig = {
     stream: true
 };
-
-var env = process.env.ENVIRONMENT;
 
 var report_options = {
     err: true, // default = true, false means don't write err
@@ -67,211 +76,100 @@ var report_options = {
     stdout: true // default = true, false means don't write stdout
 }
 
-var commands = {
-    sass: {
-        pre: fs.existsSync(project+'/gulp-hooks/sass-pre') ? project+'/gulp-hooks/sass-pre' : 'echo "No sass-pre hook found"',
-        post: fs.existsSync(project+'/gulp-hooks/sass-post') ? project+'/gulp-hooks/sass-post' : 'echo "No sass-post hook found"'
-    },
-    js: {
-        pre: fs.existsSync(project+'/gulp-hooks/js-pre') ? project+'/gulp-hooks/js-pre' : 'echo "No js-pre hook found"',
-        post: fs.existsSync(project+'/gulp-hooks/js-post') ? project+'/gulp-hooks/js-post' : 'echo "No js-post hook found"'
-    }
-};
-
-var sass_config = {
-    style: 'compressed',
-    sourcemap: false,
-    project: assets,
-    import_path: 'bower_components',
-    css: './',
-    scss: process.env.STYLES_DIR,
-    sass: process.env.STYLES_DIR
-};
-
-if(env.substr(0, 3) == 'dev' || env == 'local')
-{
-    sass_config.style = 'nested';
-    sass_config.sourcemap = true;
-}
-
+var browsers = ["last 1 version", "> 1%", "ie 8", "ie 7"];
 gulp.task('sass', function () {
-    sass(paths.styles+'/style.sass', {sourcemap: true, style: 'compact'})
-        .pipe(autoprefixer("last 1 version", "> 1%", "ie 8", "ie 7"))
-        .pipe(sourcemaps('.'))
-        .on('error', function (err) {
-            gutil.log(err.message);
-            this.emit('end');
-        })
-        .pipe(gulp.dest(paths.output_dir))
-        .pipe(exec(commands.sass.post, {pipeStdout: false}))
+    gulp.src(paths.sass+'/*.sass')
+        //.pipe(minifycss())
+        .pipe(sourcemaps.init())
+        .pipe(sass({
+            indentedSyntax: true,
+            errLogToConsole: true
+        }))
+        .pipe(autoprefixer({browsers: browsers}))
+        .pipe(sourcemaps.write())
+        .pipe(gulp.dest(paths.output+"/"+styles_dir))
         .pipe(exec.reporter(report_options))
-        .pipe(browserSync.reload(browserSyncConfig))
+        .pipe(reload(browserSyncConfig));
+
+    //sass(paths.sass+'/*.sass', {
+    //        sourcemap: false,
+    //        style: 'compressed',
+    //    })
+    //    //.pipe(autoprefixer({browsers: browsers}))
+    //    .pipe(minifycss())
+    //    .pipe(gulp.dest(paths.output));
 });
 
-//gulp.task('sass', function() {
-//    return gulp.src(paths.styles+'/*')
-//        .pipe(exec(commands.sass.pre, {pipeStdout: false}))
-//        .pipe(exec.reporter(report_options))
-//        //.pipe(filter(['*', '!**/_*^']))
-//        .pipe(compass(sass_config))
-//        .pipe(autoprefixer({browsers: ['last 2 versions', 'ie 10']}))
-//        .on('error', function (err) {
-//            gutil.log(err.message);
-//            this.emit('end');
-//        })
-//        .pipe(gulp.dest(paths.output_dir))
-//        .pipe(exec(commands.sass.post, {pipeStdout: false}))
-//        .pipe(exec.reporter(report_options))
-//        .pipe(browserSync.reload(browserSyncConfig))
-//});
+gulp.task('js:all', function() {
+    var files = [
+        paths.bower+'/modernizr/modernizr.js',
+        paths.bower+'/jquery/dist/jquery.js',
+        paths.bower+'/raven-js/dist/raven.js',
+        paths.bower+'/fastclick/lib/fastclick.js',
+        paths.bower+'/foundation/js/foundation/foundation.js',
+        paths.bower+'/foundation/js/foundation/foundation.topbar.js',
+        paths.bower+'/foundation/js/foundation/foundation.offcanvas.js',
+        paths.scripts+'/main.js',
+    ];
 
-gulp.task('svg', function() {
-    return gulp
-        .pipe(browserSync.reload(browserSyncConfig))
+    gulp.src(files)
+        .pipe(sourcemaps.init())
+        .pipe(concat('all.js'))
+        //.pipe(uglify())
+        .pipe(sourcemaps.write('./'))
+        .pipe(gulp.dest(paths.output+"/"+scripts_dir))
+        .pipe(reload(browserSyncConfig));
+    //gulp.src(files)
+    //    .pipe(concat('all.js'))
+    //    .pipe(uglify())
+    //    .pipe(gulp.dest(paths.output+"/scripts"));
 });
 
-// gulp.task('coffee', function() {
-//     return gulp.src(paths.scripts+'.coffee')
-//         .pipe(sourcemaps.init())
-//         .pipe(coffee({
-//             sourceMap: true
-//         }).on('error', gutil.log))
-//         .pipe(concat(paths.scripts))
-//         .pipe(gulp.dest(paths.output_dir))
-//         .pipe(browserSync.reload(browserSyncConfig))
-//         .pipe(uglify())
-//         .pipe(rename({
-//             suffix: '.min'
-//         }))
-//         .pipe(gulp.dest(paths.output_dir))
-// });
+gulp.task('js:ie', function() {
+    var files = [
+        paths.bower+'/selectivzr.foundation/selectivzr.js',
+    ];
+    gulp.src(files)
+        .pipe(sourcemaps.init())
+        .pipe(concat('ie.js'))
+        //.pipe(uglify())
+        .pipe(sourcemaps.write('./'))
+        .pipe(gulp.dest(paths.output+"/"+scripts_dir))
+        .pipe(reload(browserSyncConfig));
+    //gulp.src(files)
+    //    .pipe(concat('ie.js'))
+    //    .pipe(uglify())
+    //    //.pipe(rename({suffix: '.min'}))
+    //    .pipe(gulp.dest(paths.output+"/scripts"));
+});
 
-// gulp.task('js', function() {
-//     exec(commands.js.pre, {pipeStdout: false});
-//     exec.reporter(report_options);
+var backend_tcp = process.env.BACKEND_PORT_8000_TCP ? process.env.BACKEND_PORT_8000_TCP : process.env.BACKEND_PORT;
 
-//     var bundler = watchify(browserify(paths.script, {debug: true}), watchify.args);
-//     var output_file = 'script.js';
-//     bundler.transform('/root/node_modules/browserify-shim');
-//     bundler.on('update', rebundle);
-//     function rebundle() {
-//         return bundler.bundle()
-//             .on('error', function (err) {
-//                 gutil.log(err.message);
-//                 this.emit('end');
-//             })
-//             .pipe(source(output_file))
-//             .pipe(gulp.dest(paths.output_dir))
-            
-
-//     }
-//     return rebundle();
-// });
-
-var createBundle, createBundles;
-
-createBundle = function(options) {
-    var bundler = browserify({
-        entries: options.input,
-        extensions: options.extensions,
-        debug: true
+gulp.task('watch', function() {
+    browserSync.init({
+        proxy: backend_tcp ? backend_tcp.substr(6) : 'localhost:8000'
     });
-    bundler.transform('/root/node_modules/browserify-shim');
-    var rebundle = function() {
-        var startTime = new Date().getTime();
-        return bundler
-            .bundle()
-            .on('error', function() {
-                return console.log(arguments);
-            })
-            // .pipe(exec(commands.js.pre, {pipeStdout: false}))
-            // .pipe(exec.reporter(report_options))
-            .pipe(source(options.output))
-            .pipe(gulp.dest(options.destination))
-            .on('end', function() {
-                var time = (new Date().getTime() - startTime) / 1000;
-                return console.log("" + options.output.cyan + " was browserified: " + (time + 's').magenta);
-            })
-            .pipe(browserSync.reload(browserSyncConfig))
-            // .pipe(exec(commands.js.post, {pipeStdout: false}))
-            // .pipe(exec.reporter(report_options))
-            ;
-    };
-
-    return rebundle();
-};
-
-createBundles = function(bundles) {
-    return bundles.forEach(function(bundle) {
-        return createBundle({
-            input: bundle.input,
-            output: bundle.output,
-            extensions: bundle.extensions,
-            destination: bundle.destination
-        });
-    });
-};
-
-gulp.task('browserify', function() {
-
-    var scripts = fs.readdirSync(paths.scripts);
-    var files = [];
-
-    scripts.forEach(function(script) {
-        // Do not include dirctories, hidden or underscored scripts
-        if (['.', '_'].indexOf(script.substr(0, 1)) !== -1 || fs.lstatSync(paths.scripts+'/'+script).isDirectory()) {
-            return;
-        }
-
-        files.push({
-            input: [paths.scripts+'/'+script],
-            output: script,
-            extensions: ['.coffee', '.js'],
-            destination: paths.output_dir
-        });
-    });
-    return createBundles(files);
+    gulp.watch(paths.styles+'/**/*.sass', ['sass']);
+    gulp.watch(paths.scripts+'/**/*.js', ['js:all', 'js:ie',]);
+    gulp.watch(paths.src+"/**/*.py").on('change', reload);
+    gulp.watch(paths.src+"/**/*.html").on('change', reload);
 });
 
-// gulp.task('lint', function () {
-//     gulp.src(paths.scripts)
-//         .pipe(coffeelint())
-//         .pipe(coffeelint.reporter())
-// });
+gulp.task('initial-task', ['watch', 'sass', 'js:all', 'js:ie',]);
 
-// gulp.task('bower-copy', function() {
-//   return gulp.src(paths.copy)
-//   .pipe(sourcemaps.init())
-//      .pipe(concat("plugins.js"))
-//      .pipe(uglify())
-//      .pipe(rename({
-//         suffix: '.min'
-//     }))
-//     .pipe(gulp.dest(paths.output_dir))
-// });
+var p;
+gulp.task('autoreload-gulp', function(){
+    // kill previous spawned process
+    if (p) {
+        p.kill();
+        browserSync.exit();
+    }
 
-// gulp.task('bower-merge', function() {
-//   return gulp.src(paths.scripts)
-//     .pipe(sourcemaps.init())
-//     .pipe(concat("plugins.js"))
-//     .pipe(uglify())
-//     .pipe(sourcemaps.write())
-//     .pipe(gulp.dest(paths.coffee.output.dir));
-// });
-
-// gulp.task('php', function() {
-//     exec('phpunit', function(error, stdout) {
-//         sys.puts(stdout);
-//     });
-//     browserSync.reload();
-// });
-
-gulp.task('watch', ['browser-sync'], function() {
-    gulp.watch(paths.styles+'/**/*', ['sass']);
-    //gulp.watch(paths.php+'/**/*.php', ['php']);
-    gulp.watch(paths.scripts+'/**/*', ['browserify']);
+    // `spawn` a child `gulp` process linked to the parent `stdio`
+    p = spawn('gulp', ['initial-task'], {stdio: 'inherit'});
 });
 
-//gulp.task('default', ['watch', 'sass', 'coffee', 'js', 'php']);
-gulp.task('default', ['watch', 'sass', 'browserify']);
-//gulp.task('default', ['watch', 'js']);
+gulp.task('gulpfile-watch', function(){
+    gulp.watch(__filename, ['autoreload-gulp']);
+});
+gulp.task('default', ['autoreload-gulp', 'gulpfile-watch'])
