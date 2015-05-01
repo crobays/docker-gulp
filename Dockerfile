@@ -32,57 +32,6 @@ ENV PATH /usr/local/node/bin:/root/node_modules/.bin:./node_modules/.bin:$PATH
 
 WORKDIR /project
 
-RUN npm install -g gulp
-RUN cd /root && npm install \
-	gulp \
-	gulp-autoprefixer \
- 	gulp-bower \
-	browser-sync \
- 	browserify \
- 	browserify-shim
-RUN cd /root && npm install \
- 	gulp-cache \
-	gulp-coffee \
-	colors \
-	gulp-compass \
-	gulp-concat \
-	del \
-	gulp-exec
-RUN cd /root && npm install \
-	globule \
-	gulp-imagemin \
-	imagemin-jpegoptim \
-	imagemin-optipng \
-	gulp-jshint \
-	gulp-less \
-	gulp-livereload
-RUN cd /root && npm install \
- 	gulp-minify-css \
- 	gulp-notify \
-	gulp-phpunit \
-	gulp-phpspec \
-	gulp-ruby-sass \
-	gulp-sass
-RUN cd /root && npm install \
-	vinyl-source-stream \
- 	gulp-rename \
- 	gulp-sourcemaps \
- 	gulp-uglify \
-	gulp-util \
-	watchify
-
-RUN cd /root && npm install \
-	fs.extra
-
-# RUN npm install -g \
-# 	main-bower-files \
-# 	gulp-coffeelint \
-# 	gulp-cssimport \
-# 	gulp-css-globbing \
-# 	gulp-exit \
-# 	gulp-filter \
-# 	gulp-sass \
-
 # Exposed ENV
 ENV TIMEZONE Etc/UTC
 ENV ENVIRONMENT production
