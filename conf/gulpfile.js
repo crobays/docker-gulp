@@ -13,8 +13,9 @@ var gulp = require('gulp')
     ,concat = require('gulp-concat')
     //,cssimport = require("gulp-cssimport")
     //,cssGlobbing = require('gulp-css-globbing')
-    //,globule = require('globule')
     //,debug = require('gulp-debug')
+    ,globule = require('globule')
+    ,insert = require('gulp-insert')
     ,native_exec = require('child_process').exec
     ,spawn = require('child_process').spawn
     ,exec = require('gulp-exec')
@@ -23,13 +24,13 @@ var gulp = require('gulp')
     //,filter = require('gulp-filter')
     //,less = require('gulp-less')
     ,minifycss = require('gulp-minify-css')
-    //,path = require('path')
+    ,path = require('path')
     //,phpunit = require('gulp-phpunit')
     //,phpspec = require('gulp-phpspec')
     //,plumber = require('gulp-plumber')
-    ,sass = require('gulp-sass')
-    //,sass = require('gulp-ruby-sass')
-    ,source = require('vinyl-source-stream')
+    //,sass = require('gulp-sass')
+    ,sass = require('gulp-ruby-sass')
+    //,source = require('vinyl-source-stream')
     ,sourcemaps = require('gulp-sourcemaps')
     //,sys = require('sys')
     ,rename = require('gulp-rename')
@@ -47,9 +48,9 @@ catch(e) {
     project = '.';
 };
 
-var styles_dir = process.env.STYLES_DIR,
-    scripts_dir = process.env.SCRIPTS_DIR,
-    base_path = project+'/'+process.env.BASE_DIR;
+var base_path = project+'/'+process.env.BASE_DIR,
+    styles_dir = process.env.STYLES_DIR,
+    scripts_dir = process.env.SCRIPTS_DIR;
 
 var paths = {
     src: project+'/src/',
@@ -60,10 +61,10 @@ var paths = {
     bower: base_path+'/bower_components',
 };
 
-process.stdout.write('base_path styles: '+paths.styles+"\n");
+process.stdout.write('base_path styles:  '+paths.styles+"\n");
 process.stdout.write('base_path scripts: '+paths.scripts+"\n");
-process.stdout.write('output styles: '+paths.output+"/styles\n");
-process.stdout.write('output scripts: '+paths.output+"/scripts\n");
+process.stdout.write('output styles:     '+paths.output+"/"+styles_dir+"\n");
+process.stdout.write('output scripts:    '+paths.output+"/"+scripts_dir+"\n");
 
 var reload = browserSync.reload;
 var browserSyncConfig = {
@@ -76,29 +77,39 @@ var report_options = {
     stdout: true // default = true, false means don't write stdout
 }
 
-var browsers = ["last 1 version", "> 1%", "ie 8", "ie 7"];
 gulp.task('sass', function () {
-    gulp.src(paths.sass+'/*.sass')
-        //.pipe(minifycss())
-        .pipe(sourcemaps.init())
-        .pipe(sass({
-            indentedSyntax: true,
-            errLogToConsole: true
+    return sass(paths.sass+'/masters', { sourcemap: true})
+        .on('error', function (err) {
+            console.error('Error', err.message);
+        })
+        .pipe(autoprefixer({
+            browsers: ["last 1 version", "> 1%", "ie 8", "ie 7"]
         }))
-        .pipe(autoprefixer({browsers: browsers}))
-        .pipe(sourcemaps.write())
+        .pipe(sourcemaps.write('.'))
         .pipe(gulp.dest(paths.output+"/"+styles_dir))
-        .pipe(exec.reporter(report_options))
         .pipe(reload(browserSyncConfig));
-
-    //sass(paths.sass+'/*.sass', {
-    //        sourcemap: false,
-    //        style: 'compressed',
-    //    })
-    //    //.pipe(autoprefixer({browsers: browsers}))
-    //    .pipe(minifycss())
-    //    .pipe(gulp.dest(paths.output));
 });
+
+// gulp.task('sass', function () {
+//     return gulp.src(paths.sass+'/*.sass')
+//         .pipe(sourcemaps.init())
+//         .pipe(sass({
+//             indentedSyntax: true,
+//             errLogToConsole: true
+//         }))
+//         .pipe(sourcemaps.write())
+//         .pipe(gulp.dest(paths.output+"/"+styles_dir))
+// });
+
+// gulp.task('sass-autoprefix', ['sass'], function () {
+//     return gulp.src(paths.output+"/"+styles_dir+'/*.css')
+//         .pipe(autoprefixer({
+//             browsers: ["last 1 version", "> 1%", "ie 8", "ie 7"]
+//         }))
+//         .pipe(insert.append('\n\n/*# sourceMappingURL=master.css.map */'))
+//         .pipe(gulp.dest(paths.output+"/"+styles_dir))
+//         .pipe(reload(browserSyncConfig));
+// });
 
 gulp.task('js:all', function() {
     var files = [
@@ -145,31 +156,25 @@ gulp.task('js:ie', function() {
 
 var backend_tcp = process.env.BACKEND_PORT_8000_TCP ? process.env.BACKEND_PORT_8000_TCP : process.env.BACKEND_PORT;
 
-gulp.task('watch', function() {
+gulp.task('browser-sync', function() {
     browserSync.init({
         proxy: backend_tcp ? backend_tcp.substr(6) : 'localhost:8000'
     });
+});
+
+gulp.task('watch', ['browser-sync'], function() {
     gulp.watch(paths.styles+'/**/*.sass', ['sass']);
     gulp.watch(paths.scripts+'/**/*.js', ['js:all', 'js:ie',]);
     gulp.watch(paths.src+"/**/*.py").on('change', reload);
     gulp.watch(paths.src+"/**/*.html").on('change', reload);
 });
 
-gulp.task('initial-task', ['watch', 'sass', 'js:all', 'js:ie',]);
+gulp.task('default', ['gulpfile-watch', 'watch', 'sass', 'js:all', 'js:ie',]);
 
-var p;
-gulp.task('autoreload-gulp', function(){
-    // kill previous spawned process
-    if (p) {
-        p.kill();
-        browserSync.exit();
-    }
-
-    // `spawn` a child `gulp` process linked to the parent `stdio`
-    p = spawn('gulp', ['initial-task'], {stdio: 'inherit'});
+gulp.task('exit-gulp', function(){
+    process.exit(0);
 });
 
 gulp.task('gulpfile-watch', function(){
-    gulp.watch(__filename, ['autoreload-gulp']);
+   gulp.watch(__filename, ['exit-gulp']);
 });
-gulp.task('default', ['autoreload-gulp', 'gulpfile-watch'])

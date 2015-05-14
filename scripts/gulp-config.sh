@@ -1,6 +1,7 @@
 #!/bin/bash
-mkdir -p /project/$BASE_DIR/$STYLES_DIR
-mkdir -p /project/$BASE_DIR/$SCRIPTS_DIR
+cd /project
+mkdir -p /project/$BASE_DIR/src/$STYLES_DIR/masters
+mkdir -p /project/$BASE_DIR/src/$SCRIPTS_DIR
 mkdir -p /project/$BASE_DIR/$IMAGES_DIR
 
 if [ ! -f /project/gulpfile.js ]
@@ -8,13 +9,14 @@ then
 	cp -f /conf/gulpfile.js /project/gulpfile.js
 fi
 
-source /usr/local/rvm/scripts/rvm
-if [ ! -f /project/package.json ]
+if [ -f /project/package.json ]
 then
-	cp -f /conf/package.json /project/package.json
+	npm install
+else
+	cp -f /conf/package.json  /project/package.json
 fi
-npm install --save \
-	gulp \
+
+for package in gulp \
 	gulp-autoprefixer \
  	gulp-bower \
 	browser-sync \
@@ -31,6 +33,7 @@ npm install --save \
 	gulp-imagemin \
 	imagemin-jpegoptim \
 	imagemin-optipng \
+	gulp-insert \
 	gulp-jshint \
 	gulp-less \
  	gulp-minify-css \
@@ -44,6 +47,18 @@ npm install --save \
 	gulp-util \
 	watchify \
 	fs.extra
+do
+	if [ $(dot-json ./package.json devDependencies.${package//./..}) ] || [ $(dot-json ./package.json dependencies.${package//./..}) ]
+	then
+		echo "present: $package"
+	else
+		echo "missing: $package"
+		list="$list $package"
+	fi
+done
 
-npm install
-
+if [ "$list" != "" ]
+then
+	echo "Installing missing packages..."
+	npm install --save-dev $list
+fi

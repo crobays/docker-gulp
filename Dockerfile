@@ -16,20 +16,24 @@ ADD /scripts/rvm.sh /scripts/rvm.sh
 RUN /scripts/rvm.sh
 ENV PATH /usr/local/rvm/bin:$PATH
 
-RUN gem install sass -v 3.4.9
-RUN gem install compass
-RUN gem uninstall sass -v 3.4.6 2&>/dev/null
-
-RUN apt-get install -y software-properties-common && \
-	add-apt-repository -y ppa:nginx/stable && \
-	apt-get update
+RUN apt-get install -y \
+	software-properties-common \
+	libjpeg-dev \
+	jpegoptim \
+	optipng
 
 ADD /scripts/download-and-install.sh /scripts/download-and-install.sh
 ADD /scripts/node.sh /scripts/node.sh
 RUN /scripts/node.sh
 
+RUN gem install sass
+
 ENV PATH /usr/local/node/bin:/root/node_modules/.bin:./node_modules/.bin:$PATH
 
+RUN npm install -g \
+	gulp \
+	dot-json
+	
 WORKDIR /project
 
 # Exposed ENV
