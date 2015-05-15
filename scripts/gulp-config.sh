@@ -1,8 +1,13 @@
 #!/bin/bash
 cd /project
-mkdir -p /project/$BASE_DIR/src/$STYLES_DIR/sass/masters
-mkdir -p /project/$BASE_DIR/src/$SCRIPTS_DIR
-mkdir -p /project/$BASE_DIR/$IMAGES_DIR
+if [ ! -d /project/$BASE_DIR/src ]
+then
+	mkdir -p /project/$BASE_DIR/src/$STYLES_DIR/sass/inc
+	mkdir -p /project/$BASE_DIR/src/$STYLES_DIR/sass/masters
+	mkdir -p /project/$BASE_DIR/src/$STYLES_DIR/sass/pages
+	mkdir -p /project/$BASE_DIR/src/$SCRIPTS_DIR
+	mkdir -p /project/$BASE_DIR/$IMAGES_DIR
+fi
 
 if [ ! -f /project/gulpfile.js ]
 then
