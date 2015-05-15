@@ -1,6 +1,6 @@
 #!/bin/bash
 cd /project
-mkdir -p /project/$BASE_DIR/src/$STYLES_DIR/masters
+mkdir -p /project/$BASE_DIR/src/$STYLES_DIR/sass/masters
 mkdir -p /project/$BASE_DIR/src/$SCRIPTS_DIR
 mkdir -p /project/$BASE_DIR/$IMAGES_DIR
 
