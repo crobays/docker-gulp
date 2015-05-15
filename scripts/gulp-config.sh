@@ -1,19 +1,64 @@
 #!/bin/bash
-#mkdir -p "/project/$BASE_DIR/bower_components"
-#mkdir -p "/project/$BASE_DIR/fonts"
-#mkdir -p "/project/$BASE_DIR/$IMAGES_DIR"
-#mkdir -p "/project/$BASE_DIR/pictures"
+cd /project
+mkdir -p /project/$BASE_DIR/src/$STYLES_DIR/masters
+mkdir -p /project/$BASE_DIR/src/$SCRIPTS_DIR
+mkdir -p /project/$BASE_DIR/$IMAGES_DIR
 
-#mkdir -p "/project/$BASE_DIR/$STYLES_DIR"
-# if [ ! -f "/project/$BASE_DIR/$STYLES_DIR/style.sass" ];then
-# 	echo -e "body\n\tbackground-color: #eee" > "/project/$BASE_DIR/$STYLES_DIR/style.sass"
-# fi
+if [ ! -f /project/gulpfile.js ]
+then
+	cp -f /conf/gulpfile.js /project/gulpfile.js
+fi
 
-#mkdir -p "/project/$BASE_DIR/$SCRIPTS_DIR"
-# if [ ! -f "/project/$BASE_DIR/$SCRIPTS_DIR/script.js" ];then
-# 	echo -e "console.log(\"hello world\");" > "/project/$BASE_DIR/$SCRIPTS_DIR/script.js"
-# fi
+if [ -f /project/package.json ]
+then
+	npm install
+else
+	cp -f /conf/package.json  /project/package.json
+fi
 
-# if [ ! -d /project/gulp-hooks ];then
-# 	cp --recursive /conf/gulp-hooks /project/gulp-hooks
-# fi
+for package in gulp \
+	gulp-autoprefixer \
+ 	gulp-bower \
+	browser-sync \
+ 	browserify \
+ 	browserify-shim \
+ 	gulp-cache \
+	gulp-coffee \
+	colors \
+	gulp-compass \
+	gulp-concat \
+	del \
+	gulp-exec \
+	globule \
+	gulp-imagemin \
+	imagemin-jpegoptim \
+	imagemin-optipng \
+	gulp-insert \
+	gulp-jshint \
+	gulp-less \
+ 	gulp-minify-css \
+	gulp-phpunit \
+	gulp-phpspec \
+	gulp-ruby-sass \
+	gulp-sass \
+ 	gulp-rename \
+ 	gulp-sourcemaps \
+ 	gulp-uglify \
+	gulp-util \
+	watchify \
+	fs.extra
+do
+	if [ $(dot-json ./package.json devDependencies.${package//./..}) ] || [ $(dot-json ./package.json dependencies.${package//./..}) ]
+	then
+		echo "present: $package"
+	else
+		echo "missing: $package"
+		list="$list $package"
+	fi
+done
+
+if [ "$list" != "" ]
+then
+	echo "Installing missing packages..."
+	npm install --save-dev $list
+fi

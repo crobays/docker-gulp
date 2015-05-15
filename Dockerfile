@@ -16,77 +16,30 @@ ADD /scripts/rvm.sh /scripts/rvm.sh
 RUN /scripts/rvm.sh
 ENV PATH /usr/local/rvm/bin:$PATH
 
-RUN gem install sass -v 3.4.9
-RUN gem install compass
-RUN gem uninstall sass -v 3.4.6 2&>/dev/null
-
-RUN apt-get install -y software-properties-common && \
-	add-apt-repository -y ppa:nginx/stable && \
-	apt-get update
+RUN apt-get install -y \
+	software-properties-common \
+	libjpeg-dev \
+	jpegoptim \
+	optipng
 
 ADD /scripts/download-and-install.sh /scripts/download-and-install.sh
 ADD /scripts/node.sh /scripts/node.sh
 RUN /scripts/node.sh
 
+RUN gem install sass
+
 ENV PATH /usr/local/node/bin:/root/node_modules/.bin:./node_modules/.bin:$PATH
 
-WORKDIR /project
-
-RUN npm install -g gulp
-RUN cd /root && npm install \
+RUN npm install -g \
 	gulp \
-	gulp-autoprefixer \
- 	gulp-bower \
-	browser-sync \
- 	browserify \
- 	browserify-shim
-RUN cd /root && npm install \
- 	gulp-cache \
-	gulp-coffee \
-	colors \
-	gulp-compass \
-	gulp-concat \
-	del \
-	gulp-exec
-RUN cd /root && npm install \
-	globule \
-	gulp-imagemin \
-	imagemin-jpegoptim \
-	imagemin-optipng \
-	gulp-jshint \
-	gulp-less \
-	gulp-livereload
-RUN cd /root && npm install \
- 	gulp-minify-css \
- 	gulp-notify \
-	gulp-phpunit \
-	gulp-phpspec \
-	gulp-ruby-sass \
-	gulp-sass
-RUN cd /root && npm install \
-	vinyl-source-stream \
- 	gulp-rename \
- 	gulp-sourcemaps \
- 	gulp-uglify \
-	gulp-util \
-	watchify
-
-RUN cd /root && npm install \
-	fs.extra
-
-# RUN npm install -g \
-# 	main-bower-files \
-# 	gulp-coffeelint \
-# 	gulp-cssimport \
-# 	gulp-css-globbing \
-# 	gulp-exit \
-# 	gulp-filter \
-# 	gulp-sass \
+	dot-json
+	
+WORKDIR /project
 
 # Exposed ENV
 ENV TIMEZONE Etc/UTC
 ENV ENVIRONMENT production
-ENV BASE_DIR static/app
+ENV BASE_DIR src/static/app
 ENV STYLES_DIR styles
 ENV SCRIPTS_DIR scripts
 ENV IMAGES_DIR images
