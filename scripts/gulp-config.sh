@@ -14,56 +14,91 @@ then
 	cp -f /conf/gulpfile.js /project/gulpfile.js
 fi
 
-if [ -f /project/package.json ]
+if [ ! -f /project/package.json ]
 then
-	npm install
-else
 	cp -f /conf/package.json  /project/package.json
 fi
 
-for package in gulp \
-	gulp-autoprefixer \
- 	gulp-bower \
-	browser-sync \
- 	browserify \
- 	browserify-shim \
- 	gulp-cache \
-	gulp-coffee \
-	colors \
-	gulp-compass \
-	gulp-concat \
-	del \
-	gulp-exec \
-	globule \
-	gulp-imagemin \
-	imagemin-jpegoptim \
-	imagemin-optipng \
-	gulp-insert \
-	gulp-jshint \
-	gulp-less \
- 	gulp-minify-css \
-	gulp-phpunit \
-	gulp-phpspec \
-	gulp-ruby-sass \
-	gulp-sass \
- 	gulp-rename \
- 	gulp-sourcemaps \
- 	gulp-uglify \
-	gulp-util \
-	watchify \
+packages="
+	gulp
+	gulp-autoprefixer
+ 	gulp-bower
+	browser-sync
+ 	browserify
+ 	browserify-shim
+ 	gulp-cache
+	gulp-coffee
+	colors
+	gulp-compass
+	gulp-concat
+	del
+	gulp-exec
+	globule
+	gulp-imagemin
+	imagemin-jpegoptim
+	imagemin-optipng
+	gulp-insert
+	gulp-jshint
+	gulp-less
+	gulp-less
+ 	gulp-minify-css
+	gulp-phpunit
+	gulp-phpspec
+	gulp-ruby-sass
+	gulp-sass
+ 	gulp-rename
+ 	gulp-sourcemaps
+ 	gulp-uglify
+	gulp-util
+	watchify
 	fs.extra
+"
+
+for section in dependencies devDependencies
 do
-	if [ $(dot-json ./package.json devDependencies.${package//./..}) ] || [ $(dot-json ./package.json dependencies.${package//./..}) ]
+	echo "Looking for missing project packages ($section)..."
+	for package in $(dot-json ./package.json $section)
+	do
+		if [ "${package:${#package}-1:1}" != ":" ]
+		then
+			continue
+		fi
+		package="${package:1:${#package}-3}"
+		if [[ $packages =~ $package ]]
+		then
+			continue
+		fi
+		if [ ! -d "./node_modules/$package" ]
+		then
+			echo "missing package: $package"
+			install=1
+		fi
+	done
+done
+
+if [ $install ]
+then
+	echo "Installing missing project packages..."
+	npm install
+fi
+echo "All project packages installed"
+
+echo "Looking for missing gulp packages..."
+for package in $packages
+do
+	if [ ! $(dot-json ./package.json devDependencies.${package//./..}) ] && [ ! $(dot-json ./package.json dependencies.${package//./..}) ]
 	then
-		echo "present: $package"
-	else
-		echo "missing: $package"
+		echo "missing package: $package"
 		list="$list $package"
 	fi
 done
 
 if [ "$list" != "" ]
 then
-	echo "Installing missing packages..."
+	echo "Installing missing gulp packages..."
 	npm install --save-dev $list
 fi
+echo "All gulp packages installed"
+
+
+
