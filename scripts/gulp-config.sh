@@ -33,6 +33,7 @@ do
 		then
 			continue
 		fi
+		package="${package:1:${#package}-3}"
 		if [ ! -d "./node_modules/$package" ]
 		then
 			echo "missing package: $package"
