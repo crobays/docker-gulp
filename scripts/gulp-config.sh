@@ -2,11 +2,11 @@
 cd /project
 if [ ! -d /project/$BASE_DIR/src ]
 then
-	mkdir -p /project/$BASE_DIR/src/$STYLES_DIR/sass/inc
-	mkdir -p /project/$BASE_DIR/src/$STYLES_DIR/sass/masters
-	mkdir -p /project/$BASE_DIR/src/$STYLES_DIR/sass/pages
-	mkdir -p /project/$BASE_DIR/src/$SCRIPTS_DIR
-	mkdir -p /project/$BASE_DIR/$IMAGES_DIR
+	mkdir -p /project/$BASE_DIR/src/styles/sass/inc
+	mkdir -p /project/$BASE_DIR/src/styles/sass/masters
+	mkdir -p /project/$BASE_DIR/src/styles/sass/pages
+	mkdir -p /project/$BASE_DIR/src/scripts/js
+	mkdir -p /project/$BASE_DIR/images
 fi
 
 if [ ! -f /project/gulpfile.js ]
