@@ -21,37 +21,7 @@ fi
 
 packages="
 	gulp
-	gulp-autoprefixer
- 	gulp-bower
-	browser-sync
- 	browserify
- 	browserify-shim
- 	gulp-cache
-	gulp-coffee
-	colors
-	gulp-compass
-	gulp-concat
-	del
-	gulp-exec
-	globule
-	gulp-imagemin
-	imagemin-jpegoptim
-	imagemin-optipng
-	gulp-insert
-	gulp-jshint
-	gulp-less
-	gulp-less
- 	gulp-minify-css
-	gulp-phpunit
-	gulp-phpspec
-	gulp-ruby-sass
-	gulp-sass
- 	gulp-rename
- 	gulp-sourcemaps
- 	gulp-uglify
-	gulp-util
-	watchify
-	fs.extra
+	require-install
 "
 
 for section in dependencies devDependencies
@@ -60,11 +30,6 @@ do
 	for package in $(dot-json ./package.json $section)
 	do
 		if [ "${package:${#package}-1:1}" != ":" ]
-		then
-			continue
-		fi
-		package="${package:1:${#package}-3}"
-		if [[ $packages =~ $package ]]
 		then
 			continue
 		fi
