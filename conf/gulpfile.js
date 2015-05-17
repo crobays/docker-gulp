@@ -5,6 +5,7 @@ var require_install = require('require-install')
     ,autoprefixer = require_install('gulp-autoprefixer')
     ,browserSync = require_install('browser-sync')
     ,concat = require_install('gulp-concat')
+    ,filter = require_install('gulp-filter')
     ,sass = require_install('gulp-ruby-sass')
     ,sourcemaps = require_install('gulp-sourcemaps')
     //,bower = require_install('gulp-bower')
@@ -25,7 +26,6 @@ var require_install = require('require-install')
     //,spawn = require_install('child_process')//.spawn
     //,exec = require_install('gulp-exec')
     //,exit = require_install('gulp-exit')
-    //,filter = require_install('gulp-filter')
     //,less = require_install('gulp-less')
     //,minifycss = require_install('gulp-minify-css')
     //,phpunit = require_install('gulp-phpunit')
@@ -88,6 +88,7 @@ gulp.task('sass', function () {
         }))
         .pipe(sourcemaps.write('.'))
         .pipe(gulp.dest(paths.output+"/"+styles_dir))
+        .pipe(filter('**/*.css'))
         .pipe(reload(browserSyncConfig));
 });
 
@@ -109,6 +110,7 @@ gulp.task('sass', function () {
 //         }))
 //         .pipe(insert.append('\n\n/*# sourceMappingURL=master.css.map */'))
 //         .pipe(gulp.dest(paths.output+"/"+styles_dir))
+//         .pipe(filter('**/*.css'))
 //         .pipe(reload(browserSyncConfig));
 // });
 
