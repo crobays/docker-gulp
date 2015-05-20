@@ -126,12 +126,12 @@ gulp.task('js:all', function() {
         .pipe(concat('all.js'))
         //.pipe(uglify())
         .pipe(sourcemaps.write('./'))
-        .pipe(gulp.dest(output_scripts))
+        .pipe(gulp.dest(paths.output_scripts))
         .pipe(reload(browserSyncConfig));
     //gulp.src(files)
     //    .pipe(concat('all.js'))
     //    .pipe(uglify())
-    //    .pipe(gulp.dest(output_scripts));
+    //    .pipe(gulp.dest(paths.output_scripts));
 });
 
 gulp.task('js:ie', function() {
@@ -143,13 +143,13 @@ gulp.task('js:ie', function() {
         .pipe(concat('ie.js'))
         //.pipe(uglify())
         .pipe(sourcemaps.write('./'))
-        .pipe(gulp.dest(output_scripts))
+        .pipe(gulp.dest(paths.output_scripts))
         .pipe(reload(browserSyncConfig));
     //gulp.src(files)
     //    .pipe(concat('ie.js'))
     //    .pipe(uglify())
     //    //.pipe(rename({suffix: '.min'}))
-    //    .pipe(gulp.dest(output_scripts));
+    //    .pipe(gulp.dest(paths.output_scripts));
 });
 
 var backend_tcp;
