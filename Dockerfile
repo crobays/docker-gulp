@@ -1,9 +1,9 @@
-FROM phusion/baseimage:0.9.16
-ENV HOME /root
-RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
+FROM phusion/baseimage:0.9.17
 CMD ["/sbin/my_init"]
 
 MAINTAINER Crobays <crobays@userex.nl>
+
+ENV HOME /root
 ENV DOCKER_NAME gulp
 ENV DEBIAN_FRONTEND noninteractive
 
