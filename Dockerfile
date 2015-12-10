@@ -7,10 +7,11 @@ ENV HOME /root
 ENV DOCKER_NAME gulp
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get update
-RUN apt-get dist-upgrade -y
-
-RUN apt-get install -y curl
+RUN add-apt-repository ppa:git-core/ppa -y && \
+	apt-get update
+RUN apt-get install -y \
+	curl \
+	git
 
 ADD /scripts/rvm.sh /scripts/rvm.sh
 RUN /scripts/rvm.sh
