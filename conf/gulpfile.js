@@ -1,4 +1,5 @@
 var require_install = require('require-install')
+    ,child_process = require('child_process')
     ,gulp = require('gulp')
     ,fs = require('fs')
     ,path = require('path')
@@ -8,6 +9,8 @@ var require_install = require('require-install')
     ,filter = require_install('gulp-filter')
     ,sass = require_install('gulp-ruby-sass')
     ,sourcemaps = require_install('gulp-sourcemaps')
+    ,browserify = require_install('browserify')
+    //,browserify_shim = require_install('browserify-shim')
     //,bower = require_install('gulp-bower')
     //,bower_files = require_install('main-bower-files')
     //,browserify = require_install('browserify')
@@ -22,8 +25,9 @@ var require_install = require('require-install')
     //,debug = require_install('gulp-debug')
     //,globule = require_install('globule')
     //,insert = require_install('gulp-insert')
+    ,mq_remove = require_install('gulp-mq-remove')
     //,native_exec = require_install('child_process').exec
-    //,spawn = require_install('child_process')//.spawn
+    ,no_media_queries = require_install('gulp-no-media-queries')
     //,exec = require_install('gulp-exec')
     //,exit = require_install('gulp-exit')
     //,less = require_install('gulp-less')
@@ -31,10 +35,12 @@ var require_install = require('require-install')
     //,phpunit = require_install('gulp-phpunit')
     //,phpspec = require_install('gulp-phpspec')
     //,plumber = require_install('gulp-plumber')
+    ,rem_to_px = require_install('gulp-rem-to-px')
     //,sass = require_install('gulp-sass')
-    //,source = require_install('vinyl-source-stream')
+    ,source = require_install('vinyl-source-stream')
+    //,svg2png = require_install('gulp-svg2png')
     //,sys = require_install('sys')
-    //,rename = require_install('gulp-rename')
+    ,rename = require_install('gulp-rename')
     //,uglify = require_install('gulp-uglify')
     //,gutil = require_install('gulp-util')
     //,watchify = require_install('watchify')
@@ -47,15 +53,13 @@ var backend_try_list = [
     'tcp://localhost:8000',
 ];
 
-var base_path = process.env.BASE_DIR ? process.env.BASE_DIR : 'src/static/app'
+var base_path = process.env.BASE_DIR ? process.env.BASE_DIR : 'src/static/app';
 
 var paths = {
-    src: 'src',
     styles: base_path+'/src/styles',
     scripts: base_path+'/src/scripts',
-    output_styles: base_path+'/dist/styles',
-    output_scripts: base_path+'/dist/scripts',
-    bower: base_path+'/bower_components',
+    output_styles: base_path+'/dist',
+    output_scripts: base_path+'/dist',
 };
 
 var reload = browserSync.reload;
@@ -63,93 +67,63 @@ var browserSyncConfig = {
     stream: true
 };
 
-var report_options = {
-    err: true, // default = true, false means don't write err
-    stderr: true, // default = true, false means don't write stderr
-    stdout: true, // default = true, false means don't write stdout
-}
-
+child_process.exec('mkdir -p '+paths.styles+'/masters && touch '+paths.styles+'/masters/style.sass')
 gulp.task('sass', function () {
-    return sass(paths.styles+'/sass/masters', { sourcemap: true})
+    return sass(paths.styles+'/masters', { sourcemap: true})
         .on('error', function (err) {
             console.error('Error', err.message);
         })
         .pipe(autoprefixer({
             browsers: [
-                "last 1 version",
+                "last 2 version",
                 "> 1%",
-                "ie 8",
-                "ie 7",
+                "ie 11",
+                "ie 10",
+                "ie 9",
             ]
         }))
         .pipe(sourcemaps.write('.'))
         .pipe(gulp.dest(paths.output_styles))
         .pipe(filter('**/*.css'))
-        .pipe(reload(browserSyncConfig));
+        .pipe(reload(browserSyncConfig))
+        ;
 });
 
-// gulp.task('sass', function () {
-//     return gulp.src(paths.styles+'/sass/**/*.sass')
-//         .pipe(sourcemaps.init())
-//         .pipe(sass({
-//             indentedSyntax: true,
-//             errLogToConsole: true
-//         }))
-//         .pipe(sourcemaps.write())
-//         .pipe(gulp.dest(paths.output_styles))
-// });
+gulp.task('css-master-ie', ['sass'], function () {
+    gulp.src(paths.output_styles+'/style.css')
+        .pipe(no_media_queries({width: '1026px'}))
+        .pipe(rename('no-media-query.css'))
+        .pipe(gulp.dest(paths.output_styles))
+        ;
 
-// gulp.task('sass-autoprefix', ['sass'], function () {
-//     return gulp.src(paths.output_styles+'/*.css')
-//         .pipe(autoprefixer({
-//             browsers: ["last 1 version", "> 1%", "ie 8", "ie 7"]
-//         }))
-//         .pipe(insert.append('\n\n/*# sourceMappingURL=master.css.map */'))
-//         .pipe(gulp.dest(paths.output_styles))
-//         .pipe(filter('**/*.css'))
-//         .pipe(reload(browserSyncConfig));
-// });
+    return gulp.src([paths.output_styles+'/style.css', paths.output_styles+'/no-media-query.css', paths.output_styles+'/ie.css'])
+        .pipe(concat('style-ie.css'))
+        .pipe(mq_remove({type: 'screen'}))
+        .pipe(rem_to_px({fontSize: 16}))
+        .pipe(gulp.dest(paths.output_styles))
+        .pipe(filter('**/*.css'))
+        .pipe(reload(browserSyncConfig))
+        ;
+});
 
+child_process.exec('mkdir -p '+paths.scripts+'/masters && touch '+paths.scripts+'/masters/script.js')
 gulp.task('js:all', function() {
-    var files = [
-        //paths.bower+'/modernizr/modernizr.js',
-        //paths.bower+'/jquery/dist/jquery.js',
-        //paths.bower+'/fastclick/lib/fastclick.js',
-        //paths.bower+'/foundation/js/foundation/foundation.js',
-        //paths.bower+'/foundation/js/foundation/foundation.topbar.js',
-        //paths.bower+'/foundation/js/foundation/foundation.offcanvas.js',
-        paths.scripts+'/js/main.js',
-    ];
-
-    gulp.src(files)
-        .pipe(sourcemaps.init())
-        .pipe(concat('all.js'))
-        //.pipe(uglify())
-        .pipe(sourcemaps.write('./'))
-        .pipe(gulp.dest(paths.output_scripts))
-        .pipe(reload(browserSyncConfig));
-    //gulp.src(files)
-    //    .pipe(concat('all.js'))
-    //    .pipe(uglify())
-    //    .pipe(gulp.dest(paths.output_scripts));
+    return browserify(paths.scripts+'/masters/script.js')
+            .bundle()
+            .pipe(source('script.js'))
+            .pipe(gulp.dest(paths.output_scripts))
+            .pipe(reload(browserSyncConfig))
+            ;
 });
 
+child_process.exec('mkdir -p '+paths.scripts+'/masters && touch '+paths.scripts+'/masters/ie.js')
 gulp.task('js:ie', function() {
-    var files = [
-        //paths.bower+'/selectivzr.foundation/selectivzr.js',
-    ];
-    gulp.src(files)
-        .pipe(sourcemaps.init())
-        .pipe(concat('ie.js'))
-        //.pipe(uglify())
-        .pipe(sourcemaps.write('./'))
+    browserify(paths.scripts+'/masters/ie.js')
+        .bundle()
+        .pipe(source('ie.js'))
         .pipe(gulp.dest(paths.output_scripts))
-        .pipe(reload(browserSyncConfig));
-    //gulp.src(files)
-    //    .pipe(concat('ie.js'))
-    //    .pipe(uglify())
-    //    //.pipe(rename({suffix: '.min'}))
-    //    .pipe(gulp.dest(paths.output_scripts));
+        .pipe(reload(browserSyncConfig))
+        ;
 });
 
 var backend_tcp;
@@ -170,8 +144,9 @@ gulp.task('browser-sync', function() {
 gulp.task('watch', ['browser-sync'], function() {
     gulp.watch(paths.styles+'/**/*.sass', [
         'sass',
+        'css-master-ie',
     ]);
-    gulp.watch(paths.scripts+'/js/**/*.js', [
+    gulp.watch(paths.scripts+'/**/*.js', [
         'js:all',
         'js:ie',
     ]);
@@ -182,6 +157,7 @@ gulp.task('default', [
     'gulpfile-watch',
     'watch',
     'sass',
+    'css-master-ie',
     'js:all',
     'js:ie',
 ]);

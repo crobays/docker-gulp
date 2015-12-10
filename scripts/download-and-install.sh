@@ -118,7 +118,7 @@ function download_and_install ()
 	fi
 
 	info "Fetching downloads page $downloads_link..."
-	download_link="$(find_download_link "$downloads_link" "$download_link_base_pattern")"
+	download_link="$(find_download_link "$downloads_link" "$download_link_base_pattern" "$specific_version")"
 	if [ "$download_link" == "" ]
 	then
 		error "No download link found on $downloads_link"
@@ -177,7 +177,6 @@ function download_and_install ()
 			success "$application_name already installed"
 		fi
 		info "Downloaded $download_link"
-	
 	fi
 
 	echo "-- $application_name end --"
@@ -188,7 +187,7 @@ function download()
 	download_link="$1"
 	dest="$2"
 	application_name="$3"
-	
+
 	minus_one="-1"	
 	if [ "${dest:$minus_one:1}" == "/" ]
 	then
@@ -205,11 +204,10 @@ function download()
 
 	info "Downloading latest $application_name $download_link..."
 	silent_flag=""
-	if [ $SILENT_LEVEL -lt 1 ]
+	if [ $SILENT_LEVEL -gt 0 ]
 	then
 		silent_flag="--silent"
 	fi
-	
 	curl --location $silent_flag --output "$dest" --url "$download_link"
 }
 
@@ -335,51 +333,55 @@ function find_download_link()
 {
 	downloads_link="$1"
 	download_link_base_pattern="$2"
-	download_link_base_front=""
-	download_link_base_rear=""
-	latest_version=""
+	version="$3"
 
-	IFS='*' read -ra str <<< "$download_link_base_pattern"
-	for i in "${str[@]}"
-	do
-	    if [ "$download_link_base_front" == "" ]
-	    then
-	    	download_link_base_front="$i"
-	    elif [ "$download_link_base_rear" == "" ]
-	    then
-	    	download_link_base_rear="$i"
-	    fi
-	done
-	silent_flag=""
+	if [ "$version" != "" ]
+	then
+		version="$version."
+	fi
+	escaped_version="${version//./\\.}"
+	download_link_base_pattern="${download_link_base_pattern//./\\.}"
+	download_link_base_pattern="${download_link_base_pattern/\*/$escaped_version([0-9]+\.?)*}"
+
 	silent_flag=""
 	if [ $SILENT_LEVEL -gt 1 ]
 	then
 		silent_flag="--silent"
 	fi
-
-	# Find download link
-	find_download_link_html=$(curl --location $silent_flag --url "$downloads_link")
-	find_download_link_html="${find_download_link_html//href=\"/ }"
-	find_download_link_html="${find_download_link_html//$download_link_base_rear/$download_link_base_rear }"
-	for s in $find_download_link_html
+	
+	links="$(curl --location $silent_flag --url $downloads_link | awk -v RS='<a' "/ href=\".*?$download_link_base_pattern\"/{ print \$1, \$2, \$3 }" | sort)"
+	# echo "$links"
+	new_links=""
+	for link in $links
 	do
-		if [ "${s%$download_link_base_rear}" != "$s" ]
+		if [ "${link/href=\"/}" == "$link" ]
 		then
-			file_name="$(basename $s)"
-			latest_version="${file_name/${download_link_base_front}_/}"
-			latest_version="${latest_version/${download_link_base_front}-/}"
-			latest_version="${latest_version/${download_link_base_front}/}"
-			latest_version="${latest_version/_${download_link_base_rear}/}"
-			latest_version="${latest_version/-${download_link_base_rear}/}"
-			latest_version="${latest_version/${download_link_base_rear}/}"
-			if [ "$latest_version" == "master" ]
-			then
-				continue
-			fi
-			echo "$s"
-			return
+			continue
 		fi
+		link="$(echo "$link" | sed -rn 's/href="([^"]*)"(.*)/\1/p')"
+		sort_link="$(echo "$link" | sed -rn 's/([\.0-9]*[\.0-9])/\10.0.0.0./p')"
+		new_links="$(echo -e "$new_links\n$sort_link $link")"
 	done
+	# echo "$new_links" | sort
+	last_item=""
+	for link in $(echo "$new_links" | sort)
+	do
+		last_item="$link"
+	done
+
+	link=${last_item/\#/}
+	
+	if [ "$link" == "" ]
+	then
+		return
+	fi
+
+	if [ "${link/\/\//}" == "$link" ]
+	then
+		link="$downloads_link$link"
+	fi
+	
+	echo $link
 }
 
 # Removes a directory which is in between two directories: /home/subdir/directory becomes /home/directory

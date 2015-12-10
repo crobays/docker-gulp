@@ -1,16 +1,17 @@
-FROM phusion/baseimage:0.9.16
-ENV HOME /root
-RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
+FROM phusion/baseimage:0.9.17
 CMD ["/sbin/my_init"]
 
 MAINTAINER Crobays <crobays@userex.nl>
+
+ENV HOME /root
 ENV DOCKER_NAME gulp
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get update
-RUN apt-get dist-upgrade -y
-
-RUN apt-get install -y curl
+RUN add-apt-repository ppa:git-core/ppa -y && \
+	apt-get update
+RUN apt-get install -y \
+	curl \
+	git
 
 ADD /scripts/rvm.sh /scripts/rvm.sh
 RUN /scripts/rvm.sh
@@ -20,7 +21,9 @@ RUN apt-get install -y \
 	software-properties-common \
 	libjpeg-dev \
 	jpegoptim \
-	optipng
+	optipng \
+	libfreetype6 \
+	libfontconfig
 
 ADD /scripts/download-and-install.sh /scripts/download-and-install.sh
 ADD /scripts/node.sh /scripts/node.sh
@@ -31,8 +34,8 @@ RUN gem install sass
 ENV PATH /usr/local/node/bin:/root/node_modules/.bin:./node_modules/.bin:$PATH
 
 RUN npm install -g \
-	gulp \
-	dot-json
+	dot-json \
+	gulp
 	
 WORKDIR /project
 
@@ -40,6 +43,7 @@ WORKDIR /project
 ENV TIMEZONE Etc/UTC
 ENV ENVIRONMENT production
 ENV BASE_DIR src/static/app
+ENV BOILERPLATE_ZIP_URL false
 
 VOLUME ["/project"]
 
