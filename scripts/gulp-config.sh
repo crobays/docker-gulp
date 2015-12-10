@@ -1,25 +1,27 @@
 #!/bin/bash
+
 cd /project
-if [ ! -d /project/$BASE_DIR/src ]
-then
-	mkdir -p /project/$BASE_DIR/src/styles/sass/inc
-	mkdir -p /project/$BASE_DIR/src/styles/sass/masters
-	mkdir -p /project/$BASE_DIR/src/styles/sass/pages
-	mkdir -p /project/$BASE_DIR/src/scripts/js
-	mkdir -p /project/$BASE_DIR/images
-fi
 
-if [ ! -f /project/gulpfile.js ]
+var="$(env | grep _BOILERPLATE_ZIP_URL)"
+if [ "${var:${#var}-4:4}" == ".zip" ]
 then
-	cp -f /conf/gulpfile.js /project/gulpfile.js
+	boilerplate=1
 fi
+while [ ! -f /project/package.json ]
+do
+	if [ $boilerplate ]
+	then
+		sleep 1
+		continue
+	fi
 
-if [ ! -f /project/package.json ]
-then
-	cp -f /conf/package.json  /project/package.json
-fi
+	echo 'No existing package.json: ...creating one!'
+	cp /conf/package.json /project/package.json
+	break
+done
 
 packages="
+	bower
 	gulp
 	require-install
 "
@@ -62,9 +64,12 @@ done
 if [ "$list" != "" ]
 then
 	echo "Installing missing gulp packages..."
-	npm install --save-dev $list
+	npm install --save $list
 fi
 echo "All gulp packages installed"
 
 
-
+if [ -f ./bower.json ]
+then
+	bower install --allow-root --config.interactive=false
+fi

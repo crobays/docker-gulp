@@ -21,7 +21,9 @@ RUN apt-get install -y \
 	software-properties-common \
 	libjpeg-dev \
 	jpegoptim \
-	optipng
+	optipng \
+	libfreetype6 \
+	libfontconfig
 
 ADD /scripts/download-and-install.sh /scripts/download-and-install.sh
 ADD /scripts/node.sh /scripts/node.sh
@@ -32,8 +34,8 @@ RUN gem install sass
 ENV PATH /usr/local/node/bin:/root/node_modules/.bin:./node_modules/.bin:$PATH
 
 RUN npm install -g \
-	gulp \
-	dot-json
+	dot-json \
+	gulp
 	
 WORKDIR /project
 
@@ -41,6 +43,7 @@ WORKDIR /project
 ENV TIMEZONE Etc/UTC
 ENV ENVIRONMENT production
 ENV BASE_DIR src/static/app
+ENV BOILERPLATE_ZIP_URL false
 
 VOLUME ["/project"]
 

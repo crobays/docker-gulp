@@ -9,13 +9,5 @@
   },
   "license": "ISC",
   "dependencies": {},
-  "devDependencies": {
-    "browser-sync": "^2.7.1",
-    "gulp": "^3.8.11",
-    "gulp-autoprefixer": "^2.3.0",
-    "gulp-concat": "^2.5.2",
-    "gulp-filter": "^2.0.2",
-    "gulp-ruby-sass": "^1.0.5",
-    "gulp-sourcemaps": "^1.5.2"
-  }
+  "devDependencies": {}
 }
